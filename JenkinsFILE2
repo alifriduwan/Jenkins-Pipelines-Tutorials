@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     parameters {
-        booleanParam(name: 'RUN_DEPLOY', defaultValue: true, description: 'Should we deploy?')
+        choice(name: 'ENV', choices: ['dev', 'staging', 'prod'], description: 'Deployment environment')
     }
 
     stages {
@@ -13,18 +13,35 @@ pipeline {
         }
 
         stage('Test in Parallel') {
-            parallel {
-                stage('Unit Tests') {
-                    steps {
-                        echo 'Running unit tests...'
-                        sh 'sleep 5'
-                    }
+            steps {
+                script {
+                    parallel(
+                        'Unit Tests': {
+                            echo 'Running unit tests...'
+                            sh 'sleep 3'
+                        },
+                        'Integration Tests': {
+                            echo 'Running integration tests...'
+                            sh 'sleep 3'
+                        }
+                    )
                 }
-                stage('Integration Tests') {
-                    steps {
-                        echo 'Running integration tests...'
-                        sh 'sleep 5'
-                    }
+            }
+        }
+
+        stage('OS Simulation') {
+            steps {
+                script {
+                    parallel(
+                        'Linux Sim': {
+                            echo 'Simulating tests on Linux...'
+                            sh 'echo "Linux OK"'
+                        },
+                        'Windows Sim': {
+                            echo 'Simulating tests on Windows...'
+                            sh 'echo "Windows OK"'
+                        }
+                    )
                 }
             }
         }
@@ -37,23 +54,16 @@ pipeline {
         }
 
         stage('Approval') {
-            when {
-                beforeAgent true
-                expression { return params.RUN_DEPLOY }
-            }
             steps {
-                input "Do you want to proceed with deployment?"
+                timeout(time: 20, unit: 'SECONDS') {
+                    input "Do you want to proceed with deployment?"
+                }
             }
         }
 
         stage('Deploy') {
-            when {
-                beforeAgent true
-                expression { return params.RUN_DEPLOY }
-            }
             steps {
-                echo 'Deploying application...'
-                sh 'exit 1'
+                echo "Deploying to environment: ${params.ENV}"
             }
         }
     }
