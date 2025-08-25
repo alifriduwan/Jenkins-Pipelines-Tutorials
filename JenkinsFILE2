@@ -14,19 +14,10 @@ pipeline {
         stage('Deploy') {
             when {
                 beforeAgent true
-                expression { return params.RUN_DEPLOY }
-            }
-            steps {
-                echo 'Deploying application...'
-            }
-        }
-        stage('Skip-Note') {
-            when {
-                beforeAgent true
                 expression { return !params.RUN_DEPLOY }
             }
             steps {
-                echo 'RUN_DEPLOY=false → skipping Deploy stage.'
+                echo 'Deploying application...'
             }
         }
     }
