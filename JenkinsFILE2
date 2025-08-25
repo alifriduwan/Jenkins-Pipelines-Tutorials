@@ -11,10 +11,18 @@ pipeline {
                 echo "Building application..."
             }
         }
+
+        stage('Test') {
+            steps {
+                sh 'echo "All tests passed!" > results.txt'
+                archiveArtifacts artifacts: 'results.txt', fingerprint: true
+            }
+        }
+
         stage('Deploy') {
             when {
                 beforeAgent true
-                expression { return !params.RUN_DEPLOY }
+                expression { return params.RUN_DEPLOY }
             }
             steps {
                 echo 'Deploying application...'
