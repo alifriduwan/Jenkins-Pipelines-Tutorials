@@ -19,6 +19,16 @@ pipeline {
             }
         }
 
+        stage('Approval') {
+            when {
+                beforeAgent true
+                expression { return params.RUN_DEPLOY }
+            }
+            steps {
+                input "Do you want to proceed with deployment?"
+            }
+        }
+
         stage('Deploy') {
             when {
                 beforeAgent true
